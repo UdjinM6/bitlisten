@@ -44,8 +44,9 @@ TransactionSocket.init = function() {
         new Transaction(bitcoins, isDonation, currency, currencyName, isIX);
     }
 
-    function spawnTransaction(data, isIX){
-        // console.log(provider_name + ': tx data: ' + JSON.stringify(data) + ' vout length: ' + data.vout.length);
+    connection.on("tx", function(data) {
+        isIX = data.txlock;
+        // console.log(provider_name + ': ' + (isIX ? 'ix' : 'tx') + ' data: ' + JSON.stringify(data) + ' vout length: ' + data.vout.length);
 
         // Dash volume is quite low - show bubble for every output
         // var transacted = 0;
@@ -60,17 +61,6 @@ TransactionSocket.init = function() {
                 isIX ? 0 : Math.random() * DELAY_CAP);
             // console.log(provider_name + ': tx data: ' + transacted);
         }
-
-
-
-    }
-
-    connection.on("tx", function(data){
-        spawnTransaction(data, false);
-    });
-
-    connection.on("ix", function(data){
-        spawnTransaction(data, true);
     });
 
     connection.on("block", function(blockHash){
