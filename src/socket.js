@@ -2,7 +2,7 @@ var satoshi = 100000000;
 var DELAY_CAP = 20000;
 var lastBlockHeight = 0;
 
-var provider_name = "insight.dash.org";
+var provider_name = "insight.dashevo.org";
 
 var transactionSocketDelay = 1000;
 
@@ -40,32 +40,27 @@ TransactionSocket.init = function() {
     });
 
 
-    function newTx(bitcoins, isDonation, currency, currencyName, isIX) {
-        new Transaction(bitcoins, isDonation, currency, currencyName, isIX);
+    function newTx(bitcoins, isDonation, currency, currencyName) {
+        new Transaction(bitcoins, isDonation, currency, currencyName);
     }
 
     connection.on("tx", function(data) {
-        isIX = data.txlock;
-        // console.log(provider_name + ': ' + (isIX ? 'ix' : 'tx') + ' data: ' + JSON.stringify(data) + ' vout length: ' + data.vout.length);
+        // console.log(provider_name + ': ' + ' data: ' + JSON.stringify(data) + ' vout length: ' + data.vout.length);
 
-        // Dash volume is quite low - show bubble for every output
-        // var transacted = 0;
         var vout = data.vout;
         for (var i = 0; i < vout.length; i++) {
-            // transacted += vout[i][Object.keys(vout[i])];
             // console.log(provider_name + ': tx data: ' + Object.keys(vout[i]) + ' ' + vout[i][Object.keys(vout[i])]);
-            var bitcoins = vout[i][Object.keys(vout[i])] / satoshi;
-            setTimeout(newTx(bitcoins,
-                            Object.keys(vout[i]) == DONATION_ADDRESS,
-                            '', '', isIX),
-                isIX ? 0 : Math.random() * DELAY_CAP);
             // console.log(provider_name + ': tx data: ' + transacted);
+            if (Object.keys(vout[i]) == DONATION_ADDRESS) {
+                setTimeout(newTx(vout[i][Object.keys(vout[i])] / satoshi, true, '', ''), Math.random() * DELAY_CAP);
+            }
         }
+        setTimeout(newTx(data.valueOut, false, '', ''), Math.random() * DELAY_CAP);
     });
 
     connection.on("block", function(blockHash){
         // console.log(provider_name + ': blockHash: ' + blockHash);
-        $.getJSON('https://' + provider_name + '/api/block/' + blockHash, function(blockData) {
+        $.getJSON('https://' + provider_name + '/insight-api/block/' + blockHash, function(blockData) {
             // console.log(provider_name + ': blockData: ' + JSON.stringify(blockData));
             var blockHeight = blockData.height;
             var transactions = blockData.tx.length;

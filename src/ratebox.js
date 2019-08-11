@@ -13,28 +13,27 @@ $(document).ready(function() {
     });
 
     // Poloniex Push API
-    var wsuri = "wss://api.poloniex.com";
-    var connection = new autobahn.Connection({
-        url: wsuri,
-        realm: "realm1"
-    });
+    var wsuri = "wss://api2.poloniex.com";
+    var socket = new WebSocket(wsuri);
 
-    connection.onopen = function (session) {
-        function tickerEvent (args,kwargs) {
-            if (args[0] === 'BTC_DASH' && currentExchange === "poloniex") {
-                // console.log('ticker: ' + args);
-                $("#rate").html(parseFloat(args[1]).toFixed(4));
-            }
+    socket.onopen = function () {
+        console.log("Poloniex WebSocket: Connection open!");
+        socket.send('{"command" : "subscribe", "channel" : 1002}'); // 1002 == tickers
+    };
+
+    socket.onclose = function (event) {
+        console.log("Poloniex WebSocket: Connection closed");
+    };
+
+    socket.onmessage = function(event) {
+        // console.log("data " + event.data);
+        data = JSON.parse(event.data);
+        // console.log('ticker: ' + data[2][0]);
+        if (data[2] && data[2][0] === 24 && currentExchange === "poloniex") { // 24 == BTC_DASH
+            // console.log('ticker: ' + data[2]);
+            $("#rate").html(parseFloat(data[2][1]).toFixed(6));
         }
-        session.subscribe('ticker', tickerEvent);
     };
-
-    connection.onclose = function () {
-        console.log("Websocket connection closed");
-    };
-
-    connection.open();
-
 });
 
 switchExchange = function(exchangeName) {
@@ -47,7 +46,7 @@ switchExchange = function(exchangeName) {
         $("#bitstampRate").css("color", "gray");
         $("#units").html("BTC / DASH");
         $.getJSON("https://poloniex.com/public?command=returnTicker", function(data) {
-            $("#rate").html(parseFloat(data.BTC_DASH.last).toFixed(4));
+            $("#rate").html(parseFloat(data.BTC_DASH.last).toFixed(6));
         });
     } else if (exchangeName === "bitstamp") {
         $("#bitstampRate").css("color", "white");
