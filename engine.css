@@ -5,11 +5,6 @@
 	-webkit-box-sizing: border-box;
 }
 
-@font-face {
-    font-family: bitcoinsymbol;
-    src: url(lib/BTC.ttf);
-}
-
 body {
     position: absolute;
 	width: 100%;
@@ -35,7 +30,7 @@ a {
 }
 
 .bitcoinsymbol {
-    font-family: bitcoinsymbol;
+    background-image: url('favicon.ico');
     margin: 0 1px;
 }
 
@@ -168,13 +163,18 @@ a {
 	cursor: pointer;
 }
 
-#units {
-	color: gray;
-}
-
 #headerInfo {
 	margin-top: 10px;
 	line-height: 20px;
+}
+
+#txStats {
+	position: absolute;
+	text-align: right;
+	bottom: 10px;
+	right: 1em;
+	line-height: 1;
+	color: gray;
 }
 
 #header img {
@@ -310,30 +310,6 @@ a.boxclose{
     color:#EF7777;
 }
 
-#showChart {
-	padding-left: 2em;
-	padding-top: 10px;
-	color: white;
-}
-
-#showChartButton {
-	cursor: pointer;
-}
-
-#chartElement {
-	display: none;
-}
-
-#chartHolder {
-	width: 100%;
-	height: 100%;
-}
-
-#chartCell {
-	display: none;
-	width: 50%;
-}
-    
 .serif {
 	font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
 }
