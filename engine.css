@@ -5,11 +5,6 @@
 	-webkit-box-sizing: border-box;
 }
 
-@font-face {
-    font-family: bitcoinsymbol;
-    src: url(lib/BTC.ttf);
-}
-
 body {
     position: absolute;
 	width: 100%;
@@ -35,7 +30,7 @@ a {
 }
 
 .bitcoinsymbol {
-    font-family: bitcoinsymbol;
+    background-image: url('favicon.ico');
     margin: 0 1px;
 }
 
@@ -168,13 +163,22 @@ a {
 	cursor: pointer;
 }
 
-#units {
-	color: gray;
-}
-
 #headerInfo {
 	margin-top: 10px;
 	line-height: 20px;
+}
+
+#txStats {
+	position: absolute;
+	text-align: right;
+	bottom: 10px;
+	right: 1em;
+	line-height: 1;
+	color: gray;
+}
+
+#txTotal {
+	color: #008de4;
 }
 
 #header img {
@@ -310,30 +314,6 @@ a.boxclose{
     color:#EF7777;
 }
 
-#showChart {
-	padding-left: 2em;
-	padding-top: 10px;
-	color: white;
-}
-
-#showChartButton {
-	cursor: pointer;
-}
-
-#chartElement {
-	display: none;
-}
-
-#chartHolder {
-	width: 100%;
-	height: 100%;
-}
-
-#chartCell {
-	display: none;
-	width: 50%;
-}
-    
 .serif {
 	font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
 }
@@ -362,3 +342,58 @@ a.boxclose{
     color: #666666;
 }
 
+/* mobile */
+@media screen and (max-width: 768px) {
+#header {
+	position: relative;
+	top: 0;
+	padding: 5px 0 1em 0;
+	font-size: 10px;
+}
+#headerInfo {
+	margin-top: 0;
+	line-height: 1.5em;
+}
+#hideInterface {
+	top: 0;
+	font-size: 10px;
+	margin: 5px;
+}
+#rate {
+	font-size: 2em;
+	color: white;
+}
+#rateBox {
+	bottom: 0em;
+	left: 1em;
+}
+#txStats {
+	bottom: 0em;
+}
+#connectionInnerDiv {
+	font-size: 0.5em;
+	bottom: 1em;
+	left: 2em;
+	margin: 0;
+	width: 35em;
+}
+#soundControls {
+	position: absolute;
+	margin: 0;
+	bottom: 2em;
+	left: 1em;
+	width: 16em;
+}
+#soundControls p {
+	font-size: 10px;
+}
+#volumeWrapper {
+	bottom: 0;
+	right: 0;
+	margin: 1em;
+}
+#waitingForTransactions {
+	top: 30%;
+	font-size: 2em;
+}
+}

@@ -7,14 +7,12 @@ var SOUND_DONATION_ADDRESS;
 
 var globalMute = false;
 
-var instanceId = 0;
-var pageDivId = "pageDiv";
-
 var last_update = 0;
 
 var updateTargets = [];
 
 var transaction_count = 0;
+var transaction_total = 0;
 
 // Preload images
 var bubbleImage = new Image();
@@ -24,10 +22,6 @@ blockImage.src = "images/block.png";
 
 var debugSpawner;
 
-var updateLayoutWidth = function() {
-	$(".chartMask").css("visibility", "visible");
-};
-
 var updateLayoutHeight = function() {
 	var newHeight = window.innerHeight;
 	if ($("#header").css("display") != "none") newHeight -= $("#header").outerHeight();
@@ -36,17 +30,12 @@ var updateLayoutHeight = function() {
 
 $(document).ready(function() {
 
-	prevChartWidth = $("#pageSplitter").width() / 2;
-	
-	$("#chartCell").hide();
-	
 	DONATION_ADDRESS = $("#donationAddress").html();
 	// Because the user has javascript running:
 	$("#noJavascript").css("display", "none");
 
-	// Initialize draggable vertical page splitter
 	updateLayoutHeight();
-	
+
 	StatusBox.init(DEBUG_MODE);
 
 	$(".clickSuppress").click(function() {
@@ -77,13 +66,39 @@ $(document).ready(function() {
 		}
 	};
 	// Spam the following line into console, it's kind of fun.
-	// new Block(228158, 270, 100 * satoshi, 153 * 1024);
-	
-	switchExchange("coinbase");
+	// new Transaction(12.345, false);
+	// new Block(228158, 123, 12342342243, 153 * 1024);
+
+	// look for url params
+	urlParam = function(name){
+		var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+		if (results===null){
+			return null;
+		}
+		else{
+			return results[1] || 0;
+		}
+	};
+
+	if(urlParam('hide') == 1) {
+		toggleInterface();
+	}
+
+	switchExchange("dashusd");
 	
 	// Attach mouseover qr
 	$("#donationAddress").qr();
-	
+	$("#donationAddressBitListen").qr();
+	$("#musicianDonation").qr();
+
+	// Enable wake lock.
+	// (must be wrapped in a user input event handler e.g. a mouse or touch handler)
+	var noSleep = new NoSleep();
+	document.addEventListener('click', function enableNoSleep() {
+		document.removeEventListener('click', enableNoSleep, false);
+		console.log("No sleep!");
+		noSleep.enable();
+	}, false);
 });
 
 // Function for handling interface show/hide
@@ -93,20 +108,29 @@ var toggleInterface = function() {
 		$("#hideInterface").html("[ Show Interface ]");
 		$("#hideInterface").css("opacity", "0.5");
 	} else {
-		$(".interface").fadeIn(500);
+		$(".interface").fadeIn(500, updateLayoutHeight);
 		$("#hideInterface").html("[ Hide Interface ]");
 		$("#hideInterface").css("opacity", "1");
-		updateLayoutHeight();
 	}
 };
 
 var globalUpdate = function(time) {
 	window.requestAnimationFrame(globalUpdate);
 	var delta = time - last_update;
+	txTime += delta/1000;
 	last_update = time;
 	for (var i = 0; i < updateTargets.length; i++) {
 		updateTargets[i].update(delta);
 	}
+};
+
+var txTime = 0;
+var oneDay = 24*60*60;
+var txTimeInterval;
+var txTimer = function() {
+	var days = (txTime / oneDay) >> 0;
+	var strTime = new Date(txTime * 1000).toISOString().substr(11, 8);
+	$("#txTime").text(days + "d " + strTime);
 };
 
 $(window).bind("load", function() {
@@ -115,9 +139,8 @@ $(window).bind("load", function() {
 	} else {
 		if ($("#blockchainCheckBox").prop("checked"))
 			TransactionSocket.init();
-		if ($("#mtgoxCheckBox").prop("checked"))
-			TradeSocket.init();
 	}
+	txTimeInterval = setInterval(txTimer, 1000);
 
 	window.requestAnimationFrame(globalUpdate);
 	
@@ -125,48 +148,13 @@ $(window).bind("load", function() {
 	Sound.init();
 });
 
-var endResize = function() {
-    $(".chartMask").css("visibility", "hidden");
-	for (var i = 0; i < updateTargets.length; i++) {
-		updateTargets[i].updateContainerSize();
-	}
-};
-
-var hideChart = function() {
-	$("#chartElement").hide();
-	$("#showChart").show();
-	prevChartWidth = $("#chartCell").width();
-	$("#chartCell").width(0);
-	$("#chartCell").hide();
-	$("#pageSplitter").colResizable({
-		disable: true
-	});
-};
-
-var showChart = function() {
-	$("#chartElement").show();
-	$("#showChart").hide();
-	$("#chartCell").width(prevChartWidth);
-	$("#chartCell").show();
-	$(window).trigger("resize");
-	if ($("#bitcoinChart").length === 0) {
-		// Load the iframe
-		$("#chartHolder").html('<iframe id="bitcoinChart" scrolling="no" frameBorder="0" src="http://bitcoin.clarkmoody.com/widget/chart/zeroblock/"></iframe>');
-	}
-	$("#pageSplitter").colResizable({
-		liveDrag: true,
-		onDrag: updateLayoutWidth,
-		onResize: endResize
-	});
-};
-
 $(window).resize(function() {
-    updateLayoutHeight();
+	updateLayoutHeight();
 });
 
 window.onbeforeunload = function(e) {
 	clearInterval(globalUpdate);
+	clearInterval(txTimeInterval);
 	TransactionSocket.close();
-	TradeSocket.close();
 };
 

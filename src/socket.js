@@ -2,7 +2,7 @@ var satoshi = 100000000;
 var DELAY_CAP = 20000;
 var lastBlockHeight = 0;
 
-var provider_name = "blockchain.info";
+var provider_name = "insight.dashevo.org";
 
 var transactionSocketDelay = 1000;
 
@@ -11,105 +11,66 @@ function TransactionSocket() {
 
 }
 
+function newTx(bitcoins, isDonation, currency, currencyName) {
+	new Transaction(bitcoins, isDonation, currency, currencyName);
+}
+
 TransactionSocket.init = function() {
 	// Terminate previous connection, if any
 	if (TransactionSocket.connection)
 		TransactionSocket.connection.close();
 
-	if ('WebSocket' in window) {
-		var connection = new ReconnectingWebSocket('wss://ws.blockchain.info/inv');
+	{
+		var connection = io('https://' + provider_name, {'transports': ['websocket', 'polling']});
 		TransactionSocket.connection = connection;
 
 		StatusBox.reconnecting("blockchain");
 
-		connection.onopen = function() {
-			console.log('Blockchain.info: Connection open!');
+		connection.on('connect', function () {
+			console.log(provider_name + ': Connection open!');
 			StatusBox.connected("blockchain");
-			var newTransactions = {
-				"op" : "unconfirmed_sub"
-			};
-			var newBlocks = {
-				"op" : "blocks_sub"
-			};
-			connection.send(JSON.stringify(newTransactions));
-			connection.send(JSON.stringify(newBlocks));
-			connection.send(JSON.stringify({
-				"op" : "ping_tx"
-			}));
-			// Display the latest transaction so the user sees something.
-		};
+			connection.emit('subscribe', 'inv');
+		});
 
-		connection.onclose = function() {
-			console.log('Blockchain.info: Connection closed');
+		connection.on('disconnect', function() {
+			console.log(provider_name + ': Connection closed');
 			if ($("#blockchainCheckBox").prop("checked"))
 				StatusBox.reconnecting("blockchain");
 			else
 				StatusBox.closed("blockchain");
-		};
+		});
 
-		connection.onerror = function(error) {
-			console.log('Blockchain.info: Connection Error: ' + error);
-		};
+		connection.on('error', function(error) {
+			console.log(provider_name + ': Connection Error: ' + error);
+		});
 
-		connection.onmessage = function(e) {
-			
-			var data = JSON.parse(e.data);
-			
-			if (data.op == "no_data") {
-			    TransactionSocket.close();
-			    setTimeout(TransactionSocket.init, transactionSocketDelay);
-			    transactionSocketDelay *= 2;
-			    console.log("connection borked, reconnecting");
+		connection.on("tx", function(data) {
+			var vout = data.vout;
+			for (var i = 0; i < vout.length; i++) {
+				if (Object.keys(vout[i]) == DONATION_ADDRESS) {
+					setTimeout(newTx(vout[i][Object.keys(vout[i])] / satoshi, true, '', ''), Math.random() * DELAY_CAP);
+				}
 			}
+			// console.log("https://" + provider_name + "/insight/tx/" + data.txid + " " + data.valueOut);
+			setTimeout(newTx(data.valueOut, false, '', ''), Math.random() * DELAY_CAP);
+		});
 
-			// New Transaction
-			if (data.op == "utx") {
-				var transacted = 0;
-
-				for (var i = 0; i < data.x.out.length; i++) {
-					transacted += data.x.out[i].value;
-				}
-
-				var bitcoins = transacted / satoshi;
-				//console.log("Transaction: " + bitcoins + " BTC");
-
-				var donation = false;
-                                var soundDonation = false;
-				var outputs = data.x.out;
-				for (var j = 0; j < outputs.length; j++) {
-					if ((outputs[j].addr) == DONATION_ADDRESS) {
-						bitcoins = data.x.out[j].value / satoshi;
-						new Transaction(bitcoins, true);
-						return;
-					}
-				}
-
-                if (transaction_count === 0) {
-                    new Transaction(bitcoins);
-                } else {
-				    setTimeout(function() {
-					    new Transaction(bitcoins);
-				    }, Math.random() * DELAY_CAP);
-				}
-
-			} else if (data.op == "block") {
-				var blockHeight = data.x.height;
-				var transactions = data.x.nTx;
-				var volumeSent = data.x.estimatedBTCSent;
-				var blockSize = data.x.size;
+		connection.on("block", function(blockHash){
+			$.getJSON('https://' + provider_name + '/insight-api/block/' + blockHash, function(blockData) {
+				var blockHeight = blockData.height;
+				var transactions = blockData.tx.length;
+				// no such info in insight-api :(
+				// var volumeSent = blockData.total_out;
+				// let's show difficulty instead
+				var difficulty = blockData.difficulty;
+				var blockSize = blockData.size;
 				// Filter out the orphaned blocks.
 				if (blockHeight > lastBlockHeight) {
 					lastBlockHeight = blockHeight;
-					console.log("New Block");
-					new Block(blockHeight, transactions, volumeSent, blockSize);
+					new Block(blockHeight, transactions, /*volumeSent*/difficulty, blockSize);
 				}
-			}
-
-		};
-	} else {
-		//WebSockets are not supported.
-		console.log("No websocket support.");
-		StatusBox.nosupport("blockchain");
+			});
+		});
 	}
 };
 

@@ -6,15 +6,19 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
 	style: 'currency',
 	currency: 'USD',
 	minimumFractionDigits: 0,
-	maximumFractionDigits: 0
+	maximumFractionDigits: 2
 });
 
 function Transaction(bitcoins, highlight, currency, currencyName) {
 	if (document.visibilityState === "visible") {
 		Floatable.call(this);
 
+		var maxSize = Math.min(document.body.clientWidth, document.body.clientHeight);
+		var minVelocity = 0.5;
+		var maxVelocity = 1.0;
 		this.area = bitcoins * 100 + 3000;
-		this.width = this.height = Math.sqrt(this.area / Math.PI) * 2;
+		this.width = this.height = Math.min(Math.sqrt(this.area / Math.PI) * 2, maxSize);
+		this.velocity.y = -1 * ((maxSize - this.width) / (maxSize / (maxVelocity - minVelocity)) + minVelocity);
 
 		this.addImage(bubbleImage, this.width, this.height);
 	
@@ -22,21 +26,20 @@ function Transaction(bitcoins, highlight, currency, currencyName) {
 	    var bitcoinString;
 	    
 	    if(globalShowDollar === true) {
-		bitcoinString = currencyFormatter.format(bitcoins*globalRate);    
+		    bitcoinString = currencyFormatter.format(bitcoins*globalRate);    
     	} else if (bitcoinVal === "0.00") {
-	        bitcoinString = "&lt;<span class='bitcoinsymbol'>B</span>0.01";
+	        bitcoinString = "&lt;<span class='bitcoinsymbol'>&nbsp;&nbsp;&nbsp;&nbsp;</span>0.01";
 	    } else {
-	        bitcoinString = "<span class='bitcoinsymbol'>B</span>" + bitcoinVal;
+	        bitcoinString = "<span class='bitcoinsymbol'>&nbsp;&nbsp;&nbsp;&nbsp;</span>" + bitcoinVal;
 	    }
 	
-		if (!highlight) {
-			this.addText(bitcoinString);
-		} else {
-			this.addText('<span style="color: yellow;">' + bitcoinString + '</span><br /><span style="color: cyan;">Donation</span><br /><span style="color: lime;">Thanks!</span>');
+		if (highlight) {
+			bitcoinString = '<br /><span style="color: yellow;">' + bitcoinString + '</span><br /><span style="color: cyan;">Donation</span><br /><span style="color: lime;">Thanks!</span>';
 		}
 		if (currency && currencyName) {
-			this.addText('<br />' + currency.toFixed(2) + ' ' + currencyName);
+			bitcoinString += '<br />' + currency.toFixed(2) + ' ' + currencyName;
 		}
+		this.addText(bitcoinString);
 		this.initPosition();
 		
 		// Sound
@@ -63,10 +66,12 @@ function Transaction(bitcoins, highlight, currency, currencyName) {
 	    } else {
 		    Sound.playRandomAtVolume(volume);
 	    }
-	    
-	    transaction_count++;
 	}
 
+    transaction_count++;
+    transaction_total+=bitcoins;
+    $("#txCount").text(transaction_count);
+    $("#txTotal").text(transaction_total.toFixed(8));
 }
 
 extend(Floatable, Transaction);
