@@ -2,7 +2,7 @@ var satoshi = 100000000;
 var DELAY_CAP = 20000;
 var lastBlockHeight = 0;
 
-var provider_name = "insight.dashevo.org";
+var provider_name = "insight.dash.org";
 
 var transactionSocketDelay = 1000;
 

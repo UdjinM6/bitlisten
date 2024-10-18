@@ -41,15 +41,15 @@ $(document).ready(function() {
 
     setupCoinbaseProWebSocket();
 
-    $.getJSON("https://api.pro.coinbase.com/products/BTC-USD/ticker", function(data) {
+    $.getJSON("https://api.exchange.coinbase.com/products/BTC-USD/ticker", function(data) {
         USD_BTC = parseFloat(data.price).toFixed(2);
         updateRate();
     });
-    $.getJSON("https://api.pro.coinbase.com/products/DASH-USD/ticker", function(data) {
+    $.getJSON("https://api.exchange.coinbase.com/products/DASH-USD/ticker", function(data) {
         USD_DASH = parseFloat(data.price).toFixed(2);
         updateRate();
     });
-    $.getJSON("https://api.pro.coinbase.com/products/DASH-BTC/ticker", function(data) {
+    $.getJSON("https://api.exchange.coinbase.com/products/DASH-BTC/ticker", function(data) {
         BTC_DASH = parseFloat(data.price).toFixed(6);
         updateRate();
     });
@@ -105,7 +105,7 @@ function setupPoloniexWebSocket() {
 
 function setupCoinbaseProWebSocket() {
     // CoinbasePro WebSocket API
-    var wsuri = "wss://ws-feed.pro.coinbase.com";
+    var wsuri = "wss://ws-feed.exchange.coinbase.com";
     var socket = new WebSocket(wsuri);
 
     socket.onopen = function () {

@@ -26,7 +26,7 @@ The project uses these libraries:
 
 The project uses these APIs:
 
-* [insight.dashevo.org](http://insight.dashevo.org) WebSocket API (For Transactions)
+* [insight.dash.org](http://insight.dash.org) WebSocket API (For Transactions)
 * ~~[Bitstamp.net](https://www.bitstamp.net/) WebSocket API (For Price Ticker)~~
 * ~~[Poloniex.com](https://poloniex.com/) WebSocket API (For Price Ticker)~~
 * [Pro.Coinbase.com](https://pro.coinbase.com/) WebSocket API (For Price Ticker)
